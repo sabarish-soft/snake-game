@@ -4,40 +4,39 @@ const scoreElement = document.getElementById('score');
 const finalScoreElement = document.getElementById('finalScore');
 const gameOverElement = document.getElementById('gameOver');
 
-const gridSize = 20;
-const tileCount = canvas.width / gridSize;
+// Game constants
+const GRID_SIZE = 20;
+const TILE_COUNT = canvas.width / GRID_SIZE;
+const SHAPES = ['square', 'circle', 'diamond', 'triangle'];
+const COLORS = {
+    silver: '#C0C0C0',
+    gold: '#FFD700',
+    bronze: '#CD7F32',
+    copper: '#B87333',
+    steelBlue: '#4682B4',
+    amethyst: '#9966CC',
+    emerald: '#50C878',
+    platinum: '#E6E8FA'
+};
 
-const shapes = ['square', 'circle', 'diamond', 'triangle'];
-const colors = [
-    '#C0C0C0', // Silver
-    '#FFD700', // Gold
-    '#CD7F32', // Bronze
-    '#B87333', // Copper
-    '#4682B4', // Steel Blue
-    '#9966CC', // Amethyst
-    '#50C878', // Emerald
-    '#E6E8FA'  // Platinum
-];
-
-// Separate arrays for positions and segment properties
+// Game state
 let snakePositions = [{ x: 10, y: 10 }];
-let snakeSegments = [{ shape: 'square', color: '#4CAF50' }];
-
+let snakeSegments = [{ shape: 'square', color: COLORS.emerald }];
 let food = { 
     x: 15, 
     y: 15,
-    shape: shapes[Math.floor(Math.random() * shapes.length)],
-    color: colors[Math.floor(Math.random() * colors.length)],
+    shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+    color: Object.values(COLORS)[Math.floor(Math.random() * Object.keys(COLORS).length)],
     dx: 0,
     dy: 0,
     moveCounter: 0,
-    moveInterval: 5 // Move every 5 frames
+    moveInterval: 5
 };
 
-// Particle system for explosion effect
+// Particle system
 let particles = [];
 const PARTICLE_COUNT = 15;
-const PARTICLE_LIFETIME = 20; // frames
+const PARTICLE_LIFETIME = 20;
 const PARTICLE_SPEED = 3;
 
 class Particle {
@@ -69,6 +68,7 @@ class Particle {
     }
 }
 
+// Movement state
 let dx = 0;
 let dy = 0;
 let score = 0;
@@ -76,8 +76,8 @@ let gameLoop;
 let gameSpeed = 200;
 
 function createExplosion(x, y, color) {
-    const centerX = x * gridSize + gridSize / 2;
-    const centerY = y * gridSize + gridSize / 2;
+    const centerX = x * GRID_SIZE + GRID_SIZE / 2;
+    const centerY = y * GRID_SIZE + GRID_SIZE / 2;
     for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push(new Particle(centerX, centerY, color));
     }
@@ -102,7 +102,7 @@ function clearCanvas() {
     // Add subtle grid pattern
     ctx.strokeStyle = '#252525';
     ctx.lineWidth = 0.5;
-    for (let i = 0; i <= canvas.width; i += gridSize) {
+    for (let i = 0; i <= canvas.width; i += GRID_SIZE) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(i, canvas.height);
@@ -145,9 +145,9 @@ function hexToRgb(hex) {
 }
 
 function draw3DShape(x, y, shape, color) {
-    const centerX = x * gridSize + gridSize / 2;
-    const centerY = y * gridSize + gridSize / 2;
-    const size = gridSize - 4;
+    const centerX = x * GRID_SIZE + GRID_SIZE / 2;
+    const centerY = y * GRID_SIZE + GRID_SIZE / 2;
+    const size = GRID_SIZE - 4;
     
     // Enhanced shadow for more depth
     ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
@@ -161,14 +161,14 @@ function draw3DShape(x, y, shape, color) {
     
     switch(shape) {
         case 'square':
-            ctx.fillRect(x * gridSize + 2, y * gridSize + 2, size, size);
+            ctx.fillRect(x * GRID_SIZE + 2, y * GRID_SIZE + 2, size, size);
             // Add metallic highlights
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.lineWidth = 1.5;
-            ctx.moveTo(x * gridSize + 2, y * gridSize + 2);
-            ctx.lineTo(x * gridSize + size + 2, y * gridSize + 2);
-            ctx.lineTo(x * gridSize + size + 2, y * gridSize + size + 2);
+            ctx.moveTo(x * GRID_SIZE + 2, y * GRID_SIZE + 2);
+            ctx.lineTo(x * GRID_SIZE + size + 2, y * GRID_SIZE + 2);
+            ctx.lineTo(x * GRID_SIZE + size + 2, y * GRID_SIZE + size + 2);
             ctx.stroke();
             break;
             
@@ -274,11 +274,11 @@ function moveFood() {
         let newY = food.y + food.dy;
 
         // Bounce off walls
-        if (newX < 0 || newX >= tileCount) {
+        if (newX < 0 || newX >= TILE_COUNT) {
             food.dx *= -1;
             newX = food.x + food.dx;
         }
-        if (newY < 0 || newY >= tileCount) {
+        if (newY < 0 || newY >= TILE_COUNT) {
             food.dy *= -1;
             newY = food.y + food.dy;
         }
@@ -326,10 +326,10 @@ function moveSnake() {
 
 function generateFood() {
     const newFood = {
-        x: Math.floor(Math.random() * tileCount),
-        y: Math.floor(Math.random() * tileCount),
-        shape: shapes[Math.floor(Math.random() * shapes.length)],
-        color: colors[Math.floor(Math.random() * colors.length)],
+        x: Math.floor(Math.random() * TILE_COUNT),
+        y: Math.floor(Math.random() * TILE_COUNT),
+        shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+        color: Object.values(COLORS)[Math.floor(Math.random() * Object.keys(COLORS).length)],
         dx: 0,
         dy: 0,
         moveCounter: 0,
@@ -338,8 +338,8 @@ function generateFood() {
     
     // Make sure food doesn't spawn on snake
     while (snakePositions.some(pos => pos.x === newFood.x && pos.y === newFood.y)) {
-        newFood.x = Math.floor(Math.random() * tileCount);
-        newFood.y = Math.floor(Math.random() * tileCount);
+        newFood.x = Math.floor(Math.random() * TILE_COUNT);
+        newFood.y = Math.floor(Math.random() * TILE_COUNT);
     }
 
     food = newFood;
@@ -349,7 +349,7 @@ function checkCollision() {
     const head = snakePositions[0];
     
     // Wall collision
-    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+    if (head.x < 0 || head.x >= TILE_COUNT || head.y < 0 || head.y >= TILE_COUNT) {
         gameOver();
         return;
     }
@@ -383,7 +383,7 @@ function gameOver() {
 
 function restartGame() {
     snakePositions = [{ x: 10, y: 10 }];
-    snakeSegments = [{ shape: 'square', color: '#4CAF50' }];
+    snakeSegments = [{ shape: 'square', color: COLORS.emerald }];
     dx = 0;
     dy = 0;
     score = 0;
